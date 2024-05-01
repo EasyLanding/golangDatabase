@@ -177,15 +177,15 @@ func SelectAllUsers() ([]User, error) {
 func main() {
 	fmt.Println(HelloWorld())
 
-	var err error
+	//var err error
 
-	allUsers, err := SelectAllUsers()
-	if err != nil {
-		fmt.Println("Ошибка при получении всех пользователей:", err)
-	} else {
-		fmt.Println("Все пользователи:")
-		for _, user := range allUsers {
-			fmt.Println(user)
-		}
-	}
+	// allUsers, err := SelectAllUsers()
+	// if err != nil {
+	// 	fmt.Println("Ошибка при получении всех пользователей:", err)
+	// } else {
+	// 	fmt.Println("Все пользователи:")
+	// 	for _, user := range allUsers {
+	// 		fmt.Println(user)
+	// 	}
+	// }
 }
