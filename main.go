@@ -20,31 +20,6 @@ type User struct {
 	Email    string `json:"email"`
 }
 
-func CreateUserTable() error {
-	db, err := sql.Open("sqlite3", "users.db")
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	sqlStmt :=
-		`CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            age INTEGER,
-            email TEXT,
-            username TEXT
-        )`
-
-	_, err = db.Exec(sqlStmt)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("User table created successfully")
-	return nil
-}
-
 func PrepareQuery(operation string, table string, user User) (string, []interface{}, error) {
 	var query string
 	var args []interface{}
@@ -65,12 +40,32 @@ func PrepareQuery(operation string, table string, user User) (string, []interfac
 	return query, args, nil
 }
 
-func InsertUser(user User) error {
-	db, err := sql.Open("sqlite3", "users.db")
+func CreateUserTable(db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("db is nil")
+	}
+
+	sqlStmt := `CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            age INTEGER,
+            email TEXT,
+            username TEXT
+        )`
+
+	_, err := db.Exec(sqlStmt)
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+
+	fmt.Println("User table created successfully")
+	return nil
+}
+
+func InsertUser(user User, db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("db is nil")
+	}
 
 	query, args, err := PrepareQuery("insert", "users", user)
 	if err != nil {
@@ -85,12 +80,10 @@ func InsertUser(user User) error {
 	return nil
 }
 
-func SelectUser(userID int) (User, error) {
-	db, err := sql.Open("sqlite3", "users.db")
-	if err != nil {
-		return User{}, err
+func SelectUser(userID int, db *sql.DB) (User, error) {
+	if db == nil {
+		return User{}, fmt.Errorf("db is nil")
 	}
-	defer db.Close()
 
 	var user User
 	query, args, err := PrepareQuery("select", "users", User{ID: userID})
@@ -107,12 +100,10 @@ func SelectUser(userID int) (User, error) {
 	return user, nil
 }
 
-func UpdateUser(user User) error {
-	db, err := sql.Open("sqlite3", "users.db")
-	if err != nil {
-		return err
+func UpdateUser(user User, db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("db is nil")
 	}
-	defer db.Close()
 
 	query, args, err := PrepareQuery("update", "users", user)
 	if err != nil {
@@ -127,12 +118,10 @@ func UpdateUser(user User) error {
 	return nil
 }
 
-func DeleteUser(userID int) error {
-	db, err := sql.Open("sqlite3", "users.db")
-	if err != nil {
-		return err
+func DeleteUser(userID int, db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("db is nil")
 	}
-	defer db.Close()
 
 	query, args, err := PrepareQuery("delete", "users", User{ID: userID})
 	if err != nil {
@@ -147,12 +136,10 @@ func DeleteUser(userID int) error {
 	return nil
 }
 
-func SelectAllUsers() ([]User, error) {
-	db, err := sql.Open("sqlite3", "users.db")
-	if err != nil {
-		return nil, err
+func SelectAllUsers(db *sql.DB) ([]User, error) {
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
 	}
-	defer db.Close()
 
 	rows, err := db.Query("SELECT id, username, email FROM users")
 	if err != nil {
@@ -175,18 +162,52 @@ func SelectAllUsers() ([]User, error) {
 }
 
 func main() {
+	db, err := sql.Open("sqlite3", "users.db")
+	if err != nil {
+		fmt.Println("Ошибка открытия базы данных:", err)
+		return
+	}
+
+	defer db.Close()
+
 	fmt.Println(HelloWorld())
 
-	var err error
-
 	// Создание таблицы пользователей
-	err = CreateUserTable()
+	err = CreateUserTable(db)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	allUsers, err := SelectAllUsers()
+	userID := 2
+	user, err := SelectUser(userID, db)
+	if err != nil {
+		fmt.Println("Ошибка при выборе пользователя:", err)
+		return
+	}
+	fmt.Println("Выбранный пользователь:")
+	fmt.Println("ID:", user.ID)
+	fmt.Println("Username:", user.Username)
+	fmt.Println("Email:", user.Email)
+
+	//Обновление юзера
+	user.Username = "jane_doe"
+	user.Email = "jane.doe@example.com"
+	err = UpdateUser(user, db)
+	if err != nil {
+		fmt.Println("Ошибка при вставке пользователя:", err)
+		return
+	}
+
+	//Удаляем юзера
+	err = DeleteUser(userID, db)
+	if err != nil {
+		fmt.Println("Ошибка при вставке пользователя:", err)
+		return
+	}
+
+	//Получаем всех юзхеров из бд
+	allUsers, err := SelectAllUsers(db)
 	if err != nil {
 		fmt.Println("Ошибка при получении всех пользователей:", err)
 	} else {
