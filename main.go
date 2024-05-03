@@ -157,7 +157,8 @@ func SelectAllUsers(db *sql.DB) ([]User, error) {
 		}
 		users = append(users, user)
 	}
-
+	if err := rows.Err(); err != nil {
+	}
 	return users, nil
 }
 
@@ -179,7 +180,7 @@ func main() {
 		return
 	}
 
-	userID := 2
+	userID := 1
 	user, err := SelectUser(userID, db)
 	if err != nil {
 		fmt.Println("Ошибка при выборе пользователя:", err)
@@ -199,12 +200,12 @@ func main() {
 		return
 	}
 
-	//Удаляем юзера
-	err = DeleteUser(userID, db)
-	if err != nil {
-		fmt.Println("Ошибка при вставке пользователя:", err)
-		return
-	}
+	// //Удаляем юзера
+	// err = DeleteUser(userID, db)
+	// if err != nil {
+	// 	fmt.Println("Ошибка при вставке пользователя:", err)
+	// 	return
+	// }
 
 	//Получаем всех юзхеров из бд
 	allUsers, err := SelectAllUsers(db)
